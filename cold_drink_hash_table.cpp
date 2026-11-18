@@ -100,6 +100,22 @@ public:
              << " -> Slot: " << hashIndex << endl;
     }
 
+    // Milestone 3: Insertion without collision resolution (direct assignment)
+    bool insertWithoutCollisionHandling(const ColdDrink& drink) {
+        int index = midSquareHash(drink.flavorID);
+        if (table[index] != nullptr) {
+            cout << "[COLLISION DETECTED at Slot " << index << "] Key " << drink.flavorID 
+                 << " collides with existing Key " << table[index]->data.flavorID 
+                 << "! Overwriting existing record (Data Loss)." << endl;
+            delete table[index]; // Overwriting
+        } else {
+            cout << "[INSERTED at Slot " << index << "] Key " << drink.flavorID 
+                 << " (" << drink.flavorName << ")" << endl;
+        }
+        table[index] = new HashNode(drink);
+        return true;
+    }
+
     void display() {
         cout << "\n=== Cold Drink Flavor Hash Table (Size " << TABLE_SIZE << ") ===" << endl;
         for (int i = 0; i < TABLE_SIZE; ++i) {
@@ -122,12 +138,12 @@ int main() {
 
     HashTable ht;
 
-    cout << "\n[Milestone 2] Testing Mid-Square Hash Function on sample keys:" << endl;
-    ht.printHashBreakdown(33); // 33^2 = 1089 -> mid digit 8
-    ht.printHashBreakdown(46); // 46^2 = 2116 -> mid digit 1
-    ht.printHashBreakdown(2);  // 2^2  =    4 -> mid digit 4
-    ht.printHashBreakdown(11); // 11^2 =  121 -> mid digit 2
-    ht.printHashBreakdown(98); // 98^2 = 9604 -> mid digit 0
+    cout << "\n[Milestone 3] Testing insertion WITHOUT collision handling:" << endl;
+    ht.insertWithoutCollisionHandling(ColdDrink(33, "Classic Cola", "Coca-Cola", 500, 40.0));
+    ht.insertWithoutCollisionHandling(ColdDrink(46, "Lemon Lime Fizz", "Sprite", 500, 35.0));
+    ht.insertWithoutCollisionHandling(ColdDrink(59, "Mango Blast", "Maaza", 600, 38.0)); // Collides with 33 at slot 8
+
+    ht.display();
 
     return 0;
 }

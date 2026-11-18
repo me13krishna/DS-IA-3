@@ -19,3 +19,11 @@
 - **What broke / Why abandoned (Failed Approach)**: When testing with key $v[13] = 2$, its square is $4$. The expression `(4 / 10) % 10` evaluated to $0$, incorrectly placing key $2$ into bucket $0$. Pure division failed on single-digit squares and was uneven across 3-digit vs. 4-digit squares (e.g. $121$ vs $1089$).
 - **How I fixed it**: Replaced the fixed arithmetic formula with dynamic digit inspection using `to_string(sq)`. By selecting the central index `midIdx = len / 2`, for length 1 (key 2, square 4, len 1) it selects index 0 ($'4'$), yielding slot 4; for length 3 (key 11, square 121) it selects index 1 ($'2'$), yielding slot 2; and for length 4 (key 33, square 1089) it selects index 2 ($'8'$), yielding slot 8. Verified with diagnostics.
 
+---
+
+### Commit 3: Direct Table Insertion without Collision Resolution
+- **What I tried**: Implemented `insertWithoutCollisionHandling()` to verify insertion flow from the hash function into table buckets. Placed elements directly into `table[index]` and printed immediate table status.
+- **What broke / Why abandoned**: When inserting multiple items hashing to the same bucket (e.g., Key 33 "Classic Cola" and Key 59 "Mango Blast" both hashing to Slot 8), the second insertion detected the occupied slot and overwrote the previous pointer. Displaying the table showed "Classic Cola" was completely lost, confirming that without collision resolution, hash tables suffer severe data corruption and memory leaks upon collision.
+- **How I fixed it**: Documented the data-loss failure in console logs as an educational milestone. Identified that each bucket must maintain an active linked list chain instead of a singular slot pointer to preserve colliding items.
+
+
