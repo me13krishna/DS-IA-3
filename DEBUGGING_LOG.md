@@ -40,6 +40,14 @@
 - **What broke / Why abandoned**: In the first deletion implementation, I simply updated `curr = curr->next; delete curr;` without holding a reference to `prev`. When deleting an interior node (e.g. Key 59 positioned between Key 33 and Key 72 in Slot 8), deleting `curr` orphaned the subsequent chain (Key 72 was severed from the bucket), creating an irreversible dangling pointer and memory leak.
 - **How I fixed it**: Maintained a trailing pointer `prev` initialized to `nullptr`. When `curr` matches the target key, the logic checks if `prev == nullptr` (head deletion: `table[index] = curr->next`) or `prev != nullptr` (interior/tail deletion: `prev->next = curr->next`). Verified by searching for Key 72 immediately following the deletion of Key 59 to ensure the chain remains fully intact.
 
+---
+
+### Commit 6: Populate 20 Personalized Keys and Test Duplicate Key Handling
+- **What I tried**: Loaded the complete 20-value personalized dataset derived from PRN `202501100133` ($S=133$, $v[i]=(133+13i)\pmod{100}$) mapped to authentic cold-drink flavours. Executed batch insertion into the hash table and implemented duplicate key rejection.
+- **What broke / Why abandoned**: During preliminary duplicate insertion testing, attempting to insert a duplicate flavor ID (Key 33 with a modified flavor name "Diet Cola") successfully appended to the end of bucket 8. This produced two differing entities with identical primary keys, violating relational and associative integrity in the table.
+- **How I fixed it**: Integrated a pre-insertion traversal step within `insert()` that examines the existing linked list in `table[index]`. If `check->data.flavorID == drink.flavorID`, insertion immediately halts, returning `false` alongside an alert `[DUPLICATE REJECTED]`. Verified that duplicate Key 33 is blocked while valid unique keys chain seamlessly.
+
+
 
 
 

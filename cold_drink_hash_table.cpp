@@ -126,17 +126,33 @@ public:
     }
 
     /**
-     * Milestone 4: Separate Chaining Collision Resolution
+     * Milestone 4 & 6: Separate Chaining with Duplicate Key Handling
      * Appends new colliding elements to the tail of the bucket's linked list.
+     * Prevents duplicate Primary Keys (Flavor IDs).
      */
-    void insert(const ColdDrink& drink) {
+    bool insert(const ColdDrink& drink) {
         int index = midSquareHash(drink.flavorID);
+
+        // Check for duplicate key in the bucket
+        HashNode* check = table[index];
+        while (check != nullptr) {
+            if (check->data.flavorID == drink.flavorID) {
+                cout << "[DUPLICATE REJECTED] Flavor ID " << drink.flavorID 
+                     << " already exists in Slot " << index 
+                     << " (" << check->data.flavorName << "). Insertion aborted." << endl;
+                return false;
+            }
+            check = check->next;
+        }
+
         HashNode* newNode = new HashNode(drink);
 
         if (table[index] == nullptr) {
             table[index] = newNode;
             cout << "[INSERT] Slot " << index << " (Head) -> ID: " << setw(2) << drink.flavorID 
-                 << " | " << drink.flavorName << endl;
+                 << " | " << setw(20) << left << drink.flavorName 
+                 << " | " << setw(18) << drink.brand 
+                 << " | Rs. " << fixed << setprecision(2) << drink.price << endl;
         } else {
             // Collision occurred - append to chain tail
             HashNode* curr = table[index];
@@ -147,9 +163,45 @@ public:
             }
             curr->next = newNode;
             cout << "[COLLISION -> CHAINED] Slot " << index << " (Pos " << (chainPos + 1) 
-                 << ") -> ID: " << setw(2) << drink.flavorID << " | " << drink.flavorName 
-                 << " (chained after ID " << curr->data.flavorID << ")" << endl;
+                 << ") -> ID: " << setw(2) << drink.flavorID 
+                 << " | " << setw(20) << left << drink.flavorName 
+                 << " | (chained after ID " << curr->data.flavorID << ")" << endl;
         }
+        return true;
+    }
+
+    // Prints chain metrics, bucket distribution, and load factor
+    void printStatistics() const {
+        int totalElements = 0;
+        int maxChain = 0;
+        int emptySlots = 0;
+
+        cout << "\n---------------- Hash Table Performance Statistics ----------------" << endl;
+        cout << setw(10) << "Slot" << setw(15) << "Chain Length" << "  Visual Representation" << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        for (int i = 0; i < TABLE_SIZE; ++i) {
+            int chainLen = 0;
+            HashNode* curr = table[i];
+            while (curr != nullptr) {
+                chainLen++;
+                curr = curr->next;
+            }
+            totalElements += chainLen;
+            if (chainLen > maxChain) maxChain = chainLen;
+            if (chainLen == 0) emptySlots++;
+
+            cout << setw(8) << i << setw(14) << chainLen << "    ";
+            for (int k = 0; k < chainLen; ++k) cout << "#";
+            if (chainLen == 0) cout << "(empty)";
+            cout << endl;
+        }
+        cout << "------------------------------------------------------------------" << endl;
+        cout << "Total Slots (m)        : " << TABLE_SIZE << endl;
+        cout << "Total Elements (n)     : " << totalElements << endl;
+        cout << "Load Factor (alpha=n/m): " << fixed << setprecision(2) << (double)totalElements / TABLE_SIZE << endl;
+        cout << "Max Chain Length       : " << maxChain << endl;
+        cout << "Empty Buckets          : " << emptySlots << " / " << TABLE_SIZE << endl;
+        cout << "------------------------------------------------------------------\n" << endl;
     }
 
     /**
@@ -224,44 +276,79 @@ public:
 };
 
 int main() {
-    cout << "========================================================" << endl;
-    cout << " Cold Drink Flavor Inventory System (Hash Table)" << endl;
-    cout << " PRN: 202501100133 | Scenario: Cold-drink flavours" << endl;
-    cout << "========================================================" << endl;
+    cout << "==========================================================================" << endl;
+    cout << " DATA STRUCTURES IA-3: HASH TABLE IMPLEMENTATION" << endl;
+    cout << " Student: Krishna | PRN: 202501100133" << endl;
+    cout << " Domain Scenario  : Cold-Drink Flavours (PRN % 3 = 0)" << endl;
+    cout << " Hash Function    : Mid-Square Method (PRN is ODD)" << endl;
+    cout << " Collision Policy : Separate Chaining (PRN % 2 = 1)" << endl;
+    cout << " Seed S = 133     : v[i] = (133 + 13*i) mod 100 for i = 0..19" << endl;
+    cout << "==========================================================================" << endl;
 
     HashTable ht;
 
-    cout << "\n[Milestone 4/5 Setup] Inserting test flavors:" << endl;
-    ht.insert(ColdDrink(33, "Classic Cola", "Coca-Cola", 500, 40.0));
-    ht.insert(ColdDrink(46, "Lemon Lime Fizz", "Sprite", 500, 35.0));
-    ht.insert(ColdDrink(59, "Mango Blast", "Maaza", 600, 38.0));
-    ht.insert(ColdDrink(72, "Orange Sunset", "Mirinda", 500, 35.0));
+    // Personalized 20-value dataset mapped to Cold Drink Flavors
+    vector<ColdDrink> dataset = {
+        ColdDrink(33, "Classic Cola",        "Coca-Cola",         500, 40.0),
+        ColdDrink(46, "Lemon Lime Fizz",     "Sprite",            500, 35.0),
+        ColdDrink(59, "Mango Blast",         "Maaza",             600, 38.0),
+        ColdDrink(72, "Orange Sunset",       "Mirinda",           500, 35.0),
+        ColdDrink(85, "Ginger Beer Ale",     "Schweppes",         330, 50.0),
+        ColdDrink(98, "Wild Cherry Soda",    "Dr Pepper",         350, 60.0),
+        ColdDrink(11, "Green Apple Sparkle", "Appy Fizz",         500, 40.0),
+        ColdDrink(24, "Grape Punch",         "Fanta Grape",       400, 45.0),
+        ColdDrink(37, "Peach Ice Soda",      "Lipton Sparkle",    450, 45.0),
+        ColdDrink(50, "Watermelon Chill",    "Slice Summer",      500, 42.0),
+        ColdDrink(63, "Pineapple Twist",     "Limca Tropical",    500, 35.0),
+        ColdDrink(76, "Blue Raspberry Fizz", "Mountain Dew Blue", 500, 45.0),
+        ColdDrink(89, "Strawberry Sparkle",  "Crush Berry",       350, 40.0),
+        ColdDrink( 2, "Fresh Lime Soda",     "Kinley Club",       600, 25.0),
+        ColdDrink(15, "Lychee Pop",          "Frooti Lychee",     300, 35.0),
+        ColdDrink(28, "Passion Fruit Punch", "Paper Boat Spark",  250, 50.0),
+        ColdDrink(41, "Blackcurrant Crush",  "Sting Berry",       250, 30.0),
+        ColdDrink(54, "Guava Zing",          "Real Spiced Guava", 500, 45.0),
+        ColdDrink(67, "Cream Vanilla Soda",  "A&W Cream Soda",    355, 55.0),
+        ColdDrink(80, "Mint Mojito Cooler",  "Ocean Breeze",      500, 48.0)
+    };
 
-    ht.display();
-
-    cout << "\n[Milestone 5] Testing Search Operation:" << endl;
-    int comps = 0;
-    int targetKey = 59;
-    ColdDrink* res = ht.searchFlavor(targetKey, comps);
-    if (res) {
-        cout << "[SEARCH SUCCESS] Found Key " << targetKey << ": " << res->flavorName 
-             << " (" << res->brand << ") in " << comps << " comparison(s)." << endl;
-    } else {
-        cout << "[SEARCH FAILED] Key " << targetKey << " not found." << endl;
+    cout << "\n>>> PHASE 1: SEQUENTIAL INSERTION OF PERSONALIZED 20-VALUE DATASET <<<" << endl;
+    cout << "--------------------------------------------------------------------------" << endl;
+    for (size_t i = 0; i < dataset.size(); ++i) {
+        cout << "[Step " << setw(2) << (i + 1) << "/20] ";
+        ht.insert(dataset[i]);
     }
 
-    cout << "\n[Milestone 5] Testing Deletion (Interior node 59):" << endl;
+    cout << "\n>>> PHASE 2: DISPLAY FULL HASH TABLE AFTER 20 INSERTIONS <<<" << endl;
+    ht.display();
+    ht.printStatistics();
+
+    cout << ">>> PHASE 3: DUPLICATE KEY INSERTION TEST <<<" << endl;
+    cout << "Attempting to insert duplicate Key 33 (Diet Cola):" << endl;
+    ht.insert(ColdDrink(33, "Diet Cola", "Coca-Cola Zero", 500, 45.0));
+
+    cout << "\n>>> PHASE 4: SEARCH OPERATIONS (HITS AND MISSES) <<<" << endl;
+    int testSearchKeys[] = {2, 67, 85, 99};
+    for (int key : testSearchKeys) {
+        int comparisons = 0;
+        ColdDrink* found = ht.searchFlavor(key, comparisons);
+        if (found) {
+            cout << "[SEARCH HIT ] Key " << setw(2) << key << " -> Found: " 
+                 << setw(20) << left << found->flavorName 
+                 << " | Brand: " << setw(18) << found->brand 
+                 << " | Price: Rs." << found->price 
+                 << " | Comparisons: " << comparisons << endl;
+        } else {
+            cout << "[SEARCH MISS] Key " << setw(2) << key << " -> Not found in table" 
+                 << " | Comparisons: " << comparisons << endl;
+        }
+    }
+
+    cout << "\n>>> PHASE 5: DELETION AND TABLE RE-VERIFICATION <<<" << endl;
+    cout << "Deleting Key 59 (Interior node in Slot 8 chain)..." << endl;
     ht.deleteFlavor(59);
 
+    cout << "\nVerifying table state after deletion:" << endl;
     ht.display();
-
-    cout << "\n[Milestone 5] Re-testing Search for deleted key 59:" << endl;
-    res = ht.searchFlavor(59, comps);
-    if (res) {
-        cout << "[SEARCH SUCCESS] Found Key 59." << endl;
-    } else {
-        cout << "[SEARCH CONFIRMED ABSENT] Key 59 not found after " << comps << " comparison(s)." << endl;
-    }
 
     return 0;
 }
