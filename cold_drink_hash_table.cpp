@@ -65,6 +65,41 @@ public:
         // Will implement memory cleanup when chaining is active
     }
 
+    /**
+     * Mid-Square Hash Function:
+     * 1. Compute square of the key: K^2
+     * 2. Extract middle digit(s) based on table size (m = 10 -> single digit [0-9])
+     * 3. Handle single/odd/even digit squares accurately.
+     */
+    int midSquareHash(int key) const {
+        long long sq = (long long)key * key;
+        string s = to_string(sq);
+        int len = (int)s.length();
+        
+        // Middle index is len / 2
+        int midIdx = len / 2;
+        int middleDigit = s[midIdx] - '0';
+        int hashIndex = middleDigit % TABLE_SIZE;
+
+        return hashIndex;
+    }
+
+    // Diagnostic method to display mid-square computation step-by-step
+    void printHashBreakdown(int key) const {
+        long long sq = (long long)key * key;
+        string s = to_string(sq);
+        int len = (int)s.length();
+        int midIdx = len / 2;
+        int middleDigit = s[midIdx] - '0';
+        int hashIndex = middleDigit % TABLE_SIZE;
+
+        cout << "Key: " << setw(2) << key 
+             << " | Square: " << setw(4) << sq 
+             << " | Digits: " << len 
+             << " | MidDigit: " << middleDigit 
+             << " -> Slot: " << hashIndex << endl;
+    }
+
     void display() {
         cout << "\n=== Cold Drink Flavor Hash Table (Size " << TABLE_SIZE << ") ===" << endl;
         for (int i = 0; i < TABLE_SIZE; ++i) {
@@ -86,7 +121,13 @@ int main() {
     cout << "========================================================" << endl;
 
     HashTable ht;
-    ht.display();
+
+    cout << "\n[Milestone 2] Testing Mid-Square Hash Function on sample keys:" << endl;
+    ht.printHashBreakdown(33); // 33^2 = 1089 -> mid digit 8
+    ht.printHashBreakdown(46); // 46^2 = 2116 -> mid digit 1
+    ht.printHashBreakdown(2);  // 2^2  =    4 -> mid digit 4
+    ht.printHashBreakdown(11); // 11^2 =  121 -> mid digit 2
+    ht.printHashBreakdown(98); // 98^2 = 9604 -> mid digit 0
 
     return 0;
 }
