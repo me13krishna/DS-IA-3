@@ -152,6 +152,56 @@ public:
         }
     }
 
+    /**
+     * Milestone 5: Search Operation with Comparison Counting
+     */
+    ColdDrink* searchFlavor(int flavorID, int& comparisons) const {
+        int index = midSquareHash(flavorID);
+        comparisons = 0;
+        HashNode* curr = table[index];
+
+        while (curr != nullptr) {
+            comparisons++;
+            if (curr->data.flavorID == flavorID) {
+                return &(curr->data);
+            }
+            curr = curr->next;
+        }
+        return nullptr;
+    }
+
+    /**
+     * Milestone 5: Delete Operation with Pointer Rewiring
+     */
+    bool deleteFlavor(int flavorID) {
+        int index = midSquareHash(flavorID);
+        HashNode* curr = table[index];
+        HashNode* prev = nullptr;
+
+        while (curr != nullptr && curr->data.flavorID != flavorID) {
+            prev = curr;
+            curr = curr->next;
+        }
+
+        if (curr == nullptr) {
+            cout << "[DELETE FAILED] Flavor ID " << flavorID << " not found in Slot " << index << "." << endl;
+            return false;
+        }
+
+        if (prev == nullptr) {
+            // Deleting head node
+            table[index] = curr->next;
+        } else {
+            // Deleting interior or tail node
+            prev->next = curr->next;
+        }
+
+        cout << "[DELETED] Flavor ID " << flavorID << " (" << curr->data.flavorName 
+             << ") successfully removed from Slot " << index << "." << endl;
+        delete curr;
+        return true;
+    }
+
     void display() {
         cout << "\n================== Cold Drink Flavor Hash Table (Separate Chaining) ==================" << endl;
         for (int i = 0; i < TABLE_SIZE; ++i) {
@@ -181,14 +231,37 @@ int main() {
 
     HashTable ht;
 
-    cout << "\n[Milestone 4] Testing Separate Chaining Collision Resolution:" << endl;
-    // Keys 33, 59, and 72 all hash to Slot 8 under Mid-Square
+    cout << "\n[Milestone 4/5 Setup] Inserting test flavors:" << endl;
     ht.insert(ColdDrink(33, "Classic Cola", "Coca-Cola", 500, 40.0));
     ht.insert(ColdDrink(46, "Lemon Lime Fizz", "Sprite", 500, 35.0));
     ht.insert(ColdDrink(59, "Mango Blast", "Maaza", 600, 38.0));
     ht.insert(ColdDrink(72, "Orange Sunset", "Mirinda", 500, 35.0));
 
     ht.display();
+
+    cout << "\n[Milestone 5] Testing Search Operation:" << endl;
+    int comps = 0;
+    int targetKey = 59;
+    ColdDrink* res = ht.searchFlavor(targetKey, comps);
+    if (res) {
+        cout << "[SEARCH SUCCESS] Found Key " << targetKey << ": " << res->flavorName 
+             << " (" << res->brand << ") in " << comps << " comparison(s)." << endl;
+    } else {
+        cout << "[SEARCH FAILED] Key " << targetKey << " not found." << endl;
+    }
+
+    cout << "\n[Milestone 5] Testing Deletion (Interior node 59):" << endl;
+    ht.deleteFlavor(59);
+
+    ht.display();
+
+    cout << "\n[Milestone 5] Re-testing Search for deleted key 59:" << endl;
+    res = ht.searchFlavor(59, comps);
+    if (res) {
+        cout << "[SEARCH SUCCESS] Found Key 59." << endl;
+    } else {
+        cout << "[SEARCH CONFIRMED ABSENT] Key 59 not found after " << comps << " comparison(s)." << endl;
+    }
 
     return 0;
 }

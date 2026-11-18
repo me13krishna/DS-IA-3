@@ -33,5 +33,13 @@
 - **What broke / Why abandoned**: In an early iteration of the while loop, wrote `while (curr != nullptr) { curr = curr->next; } curr->next = newNode;`. Because `curr` became `nullptr` upon exiting the loop, dereferencing `curr->next` triggered an immediate Segmentation Fault / Access Violation exception.
 - **How I fixed it**: Fixed the traversal invariant to check `while (curr->next != nullptr)` instead of `curr != nullptr`, keeping `curr` firmly pointing to the valid terminal node of the chain before appending `newNode`. Added an explicit check for empty buckets (`table[index] == nullptr`) to handle head initialization cleanly.
 
+---
+
+### Commit 5: Implement Search and Delete Operations with Chain Traversal
+- **What I tried**: Implemented `searchFlavor(key, comparisons)` and `deleteFlavor(key)` by navigating linked lists within hashed buckets. For deletion, traversed until finding the matching flavor ID, deleted the node, and updated adjacent pointers.
+- **What broke / Why abandoned**: In the first deletion implementation, I simply updated `curr = curr->next; delete curr;` without holding a reference to `prev`. When deleting an interior node (e.g. Key 59 positioned between Key 33 and Key 72 in Slot 8), deleting `curr` orphaned the subsequent chain (Key 72 was severed from the bucket), creating an irreversible dangling pointer and memory leak.
+- **How I fixed it**: Maintained a trailing pointer `prev` initialized to `nullptr`. When `curr` matches the target key, the logic checks if `prev == nullptr` (head deletion: `table[index] = curr->next`) or `prev != nullptr` (interior/tail deletion: `prev->next = curr->next`). Verified by searching for Key 72 immediately following the deletion of Key 59 to ensure the chain remains fully intact.
+
+
 
 
