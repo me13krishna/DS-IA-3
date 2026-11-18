@@ -26,4 +26,12 @@
 - **What broke / Why abandoned**: When inserting multiple items hashing to the same bucket (e.g., Key 33 "Classic Cola" and Key 59 "Mango Blast" both hashing to Slot 8), the second insertion detected the occupied slot and overwrote the previous pointer. Displaying the table showed "Classic Cola" was completely lost, confirming that without collision resolution, hash tables suffer severe data corruption and memory leaks upon collision.
 - **How I fixed it**: Documented the data-loss failure in console logs as an educational milestone. Identified that each bucket must maintain an active linked list chain instead of a singular slot pointer to preserve colliding items.
 
+---
+
+### Commit 4: Implement Separate Chaining Collision Resolution
+- **What I tried**: Implemented dynamic linked list chaining in `insert()`. When an incoming key hashes to an occupied bucket, the function traverses the existing chain using a pointer `curr` until reaching the last node (`curr->next == nullptr`), then attaches the new `HashNode`.
+- **What broke / Why abandoned**: In an early iteration of the while loop, wrote `while (curr != nullptr) { curr = curr->next; } curr->next = newNode;`. Because `curr` became `nullptr` upon exiting the loop, dereferencing `curr->next` triggered an immediate Segmentation Fault / Access Violation exception.
+- **How I fixed it**: Fixed the traversal invariant to check `while (curr->next != nullptr)` instead of `curr != nullptr`, keeping `curr` firmly pointing to the valid terminal node of the chain before appending `newNode`. Added an explicit check for empty buckets (`table[index] == nullptr`) to handle head initialization cleanly.
+
+
 

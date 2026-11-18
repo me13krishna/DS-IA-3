@@ -62,7 +62,16 @@ public:
     }
 
     ~HashTable() {
-        // Will implement memory cleanup when chaining is active
+        // Clean up dynamically allocated chain nodes
+        for (int i = 0; i < TABLE_SIZE; ++i) {
+            HashNode* curr = table[i];
+            while (curr != nullptr) {
+                HashNode* temp = curr;
+                curr = curr->next;
+                delete temp;
+            }
+            table[i] = nullptr;
+        }
     }
 
     /**
@@ -116,17 +125,51 @@ public:
         return true;
     }
 
+    /**
+     * Milestone 4: Separate Chaining Collision Resolution
+     * Appends new colliding elements to the tail of the bucket's linked list.
+     */
+    void insert(const ColdDrink& drink) {
+        int index = midSquareHash(drink.flavorID);
+        HashNode* newNode = new HashNode(drink);
+
+        if (table[index] == nullptr) {
+            table[index] = newNode;
+            cout << "[INSERT] Slot " << index << " (Head) -> ID: " << setw(2) << drink.flavorID 
+                 << " | " << drink.flavorName << endl;
+        } else {
+            // Collision occurred - append to chain tail
+            HashNode* curr = table[index];
+            int chainPos = 1;
+            while (curr->next != nullptr) {
+                curr = curr->next;
+                chainPos++;
+            }
+            curr->next = newNode;
+            cout << "[COLLISION -> CHAINED] Slot " << index << " (Pos " << (chainPos + 1) 
+                 << ") -> ID: " << setw(2) << drink.flavorID << " | " << drink.flavorName 
+                 << " (chained after ID " << curr->data.flavorID << ")" << endl;
+        }
+    }
+
     void display() {
-        cout << "\n=== Cold Drink Flavor Hash Table (Size " << TABLE_SIZE << ") ===" << endl;
+        cout << "\n================== Cold Drink Flavor Hash Table (Separate Chaining) ==================" << endl;
         for (int i = 0; i < TABLE_SIZE; ++i) {
             cout << "Slot [" << i << "]: ";
             if (table[i] == nullptr) {
                 cout << "EMPTY" << endl;
             } else {
-                cout << "[ID: " << table[i]->data.flavorID << " | " 
-                     << table[i]->data.flavorName << "]" << endl;
+                HashNode* curr = table[i];
+                while (curr != nullptr) {
+                    cout << " -> [ID: " << setw(2) << curr->data.flavorID 
+                         << " | " << curr->data.flavorName 
+                         << " (" << curr->data.brand << ", Rs." << curr->data.price << ")]";
+                    curr = curr->next;
+                }
+                cout << " -> NULL" << endl;
             }
         }
+        cout << "======================================================================================\n" << endl;
     }
 };
 
@@ -138,10 +181,12 @@ int main() {
 
     HashTable ht;
 
-    cout << "\n[Milestone 3] Testing insertion WITHOUT collision handling:" << endl;
-    ht.insertWithoutCollisionHandling(ColdDrink(33, "Classic Cola", "Coca-Cola", 500, 40.0));
-    ht.insertWithoutCollisionHandling(ColdDrink(46, "Lemon Lime Fizz", "Sprite", 500, 35.0));
-    ht.insertWithoutCollisionHandling(ColdDrink(59, "Mango Blast", "Maaza", 600, 38.0)); // Collides with 33 at slot 8
+    cout << "\n[Milestone 4] Testing Separate Chaining Collision Resolution:" << endl;
+    // Keys 33, 59, and 72 all hash to Slot 8 under Mid-Square
+    ht.insert(ColdDrink(33, "Classic Cola", "Coca-Cola", 500, 40.0));
+    ht.insert(ColdDrink(46, "Lemon Lime Fizz", "Sprite", 500, 35.0));
+    ht.insert(ColdDrink(59, "Mango Blast", "Maaza", 600, 38.0));
+    ht.insert(ColdDrink(72, "Orange Sunset", "Mirinda", 500, 35.0));
 
     ht.display();
 
