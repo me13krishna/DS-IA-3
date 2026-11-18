@@ -47,6 +47,14 @@
 - **What broke / Why abandoned**: During preliminary duplicate insertion testing, attempting to insert a duplicate flavor ID (Key 33 with a modified flavor name "Diet Cola") successfully appended to the end of bucket 8. This produced two differing entities with identical primary keys, violating relational and associative integrity in the table.
 - **How I fixed it**: Integrated a pre-insertion traversal step within `insert()` that examines the existing linked list in `table[index]`. If `check->data.flavorID == drink.flavorID`, insertion immediately halts, returning `false` alongside an alert `[DUPLICATE REJECTED]`. Verified that duplicate Key 33 is blocked while valid unique keys chain seamlessly.
 
+---
+
+### Commit 7: Final Documentation, Trace-Match Verification, and Git Log Export
+- **What I tried**: Consolidated program output against theoretical predictions, generated `TRACE_MATCH_REPORT.md`, formatted the debugging entries, and exported the version history with `git log --stat`.
+- **What broke / Why abandoned**: When validating the hand trace against the console log, noticed an ordering mismatch between the initial manual trace (which assumed LIFO stack insertion at the list head) and the actual program output (which implemented FIFO queue-style tail insertion).
+- **How I fixed it**: Formally documented the LIFO vs. FIFO discrepancy in Section 4 of `TRACE_MATCH_REPORT.md`. Confirmed that FIFO tail-insertion preserves inventory chronological order, verified that the bucket set membership is identical, and verified all 20 personalized records map to the exact theoretical mid-square slots.
+
+
 
 
 
